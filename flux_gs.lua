@@ -843,6 +843,13 @@ LPH_NO_VIRTUALIZE(function ()
                 data[ref] = get_value(ref)
             end
 
+            if ui.type(ref) == "hotkey" then
+                local args = { ... }
+                pcall(ui.set, ref, args[1])
+
+                return
+            end
+
             ui.set(ref, ...)
         end
 
@@ -851,7 +858,12 @@ LPH_NO_VIRTUALIZE(function ()
                 return
             end
 
-            ui.set(ref, unpack(data[ref]))
+            if ui.type(ref) == "hotkey" then
+                pcall(ui.set, ref, data[ref][1])
+            else
+                ui.set(ref, unpack(data[ref]))
+            end
+
             data[ref] = nil
         end
     end
@@ -1065,6 +1077,27 @@ LPH_NO_VIRTUALIZE(function ()
             return item.value
         end
 
+        local function set_hotkey_value(item, data)
+            local mode, key = data[1], data[2]
+
+            if type(mode) == "number" and e_hotkey_mode[mode] ~= nil then
+                mode = e_hotkey_mode[mode]
+            end
+
+            if type(mode) ~= "string" then
+                return
+            end
+
+            if type(key) == "number" then
+                -- try to restore the key as well, fall back to mode-only
+                if not pcall(ui.set, item.ref, mode, key) then
+                    pcall(ui.set, item.ref, mode)
+                end
+            else
+                pcall(ui.set, item.ref, mode)
+            end
+        end
+
         local function resolve_item_import(item, data)
             if ui.type(item.ref) == "label" then
                 return true
@@ -1078,7 +1111,24 @@ LPH_NO_VIRTUALIZE(function ()
                 return false
             end
 
-            item:set(unpack(data))
+            if ui.type(item.ref) == "hotkey" then
+                set_hotkey_value(item, data)
+                return true
+            end
+
+            -- legacy configs may store checkbox values as strings
+            if ui.type(item.ref) == "checkbox" then
+                local value = data[1]
+
+                if type(value) == "string" then
+                    value = value:lower()
+                    data[1] = value == "true" or value == "1" or value == "on"
+                elseif type(value) == "number" then
+                    data[1] = value ~= 0
+                end
+            end
+
+            pcall(item.set, item, unpack(data))
 
             return true
         end
