@@ -18104,8 +18104,8 @@ do
 
     local lines = {
         { text = string.format('%s ⁓ %s', script.name, script.build), accent = true,  size = 'b', gap = 26 },
-        { text = ''  .. script.discord_short,  accent = false, size = '',  gap = 20 },
-        { text = '' .. script.telegram_short, accent = false, size = '',  gap = 0  },
+        { text = 'discord: '  .. script.discord_short,  accent = false, size = '',  gap = 20 },
+        { text = 'telegram: ' .. script.telegram_short, accent = false, size = '',  gap = 0  },
     }
 
     local function draw_vignette(screen_width, screen_height, opacity)
